@@ -1,0 +1,5 @@
+You need to create the files ./ow1/BASE.STATIONS and ./ow1/BASE.STATIONS.MAP
+
+We are planning on having two lights at each work center which is why I have the columns "Robot" and "First piece".
+
+I included the tgz and a spreadsheet with the fields and text files with the fops in case you cannot import the tgz. 

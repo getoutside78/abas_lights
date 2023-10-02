@@ -1,0 +1,212 @@
+..!interpreter english translate noabbrev
+..*****************************************************************************
+.. Name           : LIGHTS.EV
+.. Date           : 09/14/23
+.. Version        : 2015r4n16p38
+.. Author         : abasAdam
+.. Copyright      : (c) 2023 CLARION - GREENVILLE
+.. Functionality  :
+..
+.. Interface (arguments and their meaning)
+..    uses array argument (arg.i)           : no
+..    uses name argument  (xpname=value)    : no
+..
+..    Argument     meaning
+..    -------------------------------------------------------------------------
+..
+.. Program flow   :
+...Includes       :
+..*****************************************************************************
+..
+..*****************************************************************************
+..
+..
+.continue SAVEM ? evtvar = "savemap"
+.continue ADDB  ? evtvar = "addbase"
+.continue EKEY  ? evtvar = "editkey"
+.continue MEIN  ? evtart = "maskein"
+.continue COLOR ? evtvar = "tred" ; evtvar = "tblue" ; evtvar = "tgreen"  ; evtvar = "tyellow" ; evtvar = "tmagenta" ; evtvar = "twhite"
+.continue BLINK ? evtvar = "tblinkon" ; evtvar = "tblinkoff"
+.continue OFFON ? evtvar = "tonoff"
+.continue END
+
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!SAVEM:
+..
+.typ text xtcom xtsys xtfile 
+..
+.fo xtfile = "./ow1/BASE.STATIONS.MAP"
+.out new 'xtfile'
+.input DATEI.F
+.out
+..
+.sel screen header
+..
+!L1.S:
+.sel screen line 
+.continue E1.S ? _mehr
+..
+.out add 'xtfile'
+'M|twc^id';'M|trobot';'M|tfp';'M|tbase';'M|tlight'
+.out
+..
+.continue L1.S
+..
+!E1.S:
+..
+.box Done
+Done!
+..
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!ADDB:
+..
+.continue END ? F|empty(M|baseip)
+..
+.typ text xtsys xtout xterr xtmessage xtid xtuser
+..
+.fo xtout = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xtout'
+.input DATEI.F
+.out
+.fo xterr = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xterr'
+.input DATEI.F
+.out
+..
+.fo xtid = 'G|versionneu'
+..
+.fo xtsys = "curl --silent -X POST -d " + 'G|dblquote' + "{\" + 'G|dblquote' + "devicetype\" + 'G|dblquote' + ": \" + 'G|dblquote' + 'xtid' + "\" + 'G|dblquote' + "}"
+.fo xtsys = xtsys + 'G|dblquote' + " http://" + 'M|baseip' + "/api/
+.fo xtsys = xtsys + " > " + 'xtout'
+..
+.sys 'xtsys' background
+..
+.sel from 'xtout' xtmessage^
+.continue OKS11 ? _mehr ; F|empty(xtmessage)
+.continue OKS11 ? _(xtmessage / "*error*")
+..
+Error
+.fo xtsys = "cat " + 'xtout'
+.sys 'xtsys'
+.continue END
+..
+!OKS11:
+..
+.fo xtuser = 'xtmessage' >> ":"
+.fo xtuser = xtuser >> ":"
+.fo xtuser = xtuser << "}"
+.fo xtuser = xtuser << -1
+.fo xtuser = xtuser >> -1
+..
+..'xtuser'
+..
+.fo xtsys = "printf " + 'G|dblquote' + 'M|baseip' + ";" + 'xtuser' + 'G|dblquote' + " >> ./ow1/BASE.STATIONS"
+.sys 'xtsys' background
+..
+.fo M|baseip = ""
+..
+.box Done
+Done!
+..
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!EKEY:
+..
+.typ text xtcom xtsys
+..
+.fo xtsys = "test -s ./ow1/BASE.STATIONS"
+.sys 'xtsys' background
+.continue OKSB1 ? mehr
+..
+.fo xtcom = "<text>./ow1/BASE.STATIONS<new>
+.command -WAIT 'xtcom'
+..
+.continue END
+..
+!OKSB1:
+..
+.fo xtcom = "<text>./ow1/BASE.STATIONS<edit>
+.command -WAIT 'xtcom'
+..
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!OFFON:
+..
+.typ text xtsys
+..
+.typ text xtsys
+..
+.fo xtsys = "curl --silent -X PUT -d " + G|dblquote + "{\" + G|dblquote
+..
+.fo xtsys = xtsys + "on\" + G|dblquote + ": true}" + G|dblquote      ? _M|ton
+.fo xtsys = xtsys + "on\" + G|dblquote + ": false}" + G|dblquote     ?  M|ton
+..
+.fo xtsys = xtsys + " http://" + 'M|tbase' + "/api/" + 'M|tkey' + "/lights/" + 'M|tlight' + "/state"
+..
+.sys 'xtsys' background
+..
+.fo M|ton       = _M|ton
+.fo M|tonoff    = "icon:bulb_off" ? _M|ton
+.fo M|tonoff    = "icon:bulb_on"  ?  M|ton
+..
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!BLINK:
+..
+.typ text xtsys
+..
+.fo xtsys = "curl --silent -X PUT -d " + G|dblquote + "{\" + G|dblquote
+..
+..fo xtsys = xtsys + "effect\" + G|dblquote + ": \" + G|dblquote + "colorloop\" + G|dblquote + "}" + G|dblquote
+..fo xtsys = xtsys + "effect\" + G|dblquote + ": \" + G|dblquote + "none\" + G|dblquote + "}" + G|dblquote
+..
+.fo xtsys = xtsys + "alert\" + G|dblquote + ": \" + G|dblquote + "none\" + G|dblquote + "}" + G|dblquote        ? evtvar = "tblinkoff"
+.fo xtsys = xtsys + "alert\" + G|dblquote + ": \" + G|dblquote + "lselect\" + G|dblquote + "}" + G|dblquote     ? evtvar = "tblinkon"
+..
+.fo xtsys = xtsys + " http://" + 'M|tbase' + "/api/" + 'M|tkey' + "/lights/" + 'M|tlight' + "/state"
+..
+.sys 'xtsys' background
+..
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!COLOR:
+..
+.typ text xtsys
+..
+.fo xtsys = "curl --silent -X PUT -d " + G|dblquote + "{\" + G|dblquote
+..
+.fo xtsys = xtsys + "hue\" + G|dblquote + ": 0, \" + G|dblquote + "sat\" + G|dblquote + ": 254}"        ? evtvar = "tred"
+.fo xtsys = xtsys + "hue\" + G|dblquote + ": 46920, \" + G|dblquote + "sat\" + G|dblquote + ": 254}"    ? evtvar = "tblue"
+.fo xtsys = xtsys + "hue\" + G|dblquote + ": 25500, \" + G|dblquote + "sat\" + G|dblquote + ": 254}"    ? evtvar = "tgreen"
+.fo xtsys = xtsys + "hue\" + G|dblquote + ": 12750, \" + G|dblquote + "sat\" + G|dblquote + ": 254}"    ? evtvar = "tyellow"
+.fo xtsys = xtsys + "hue\" + G|dblquote + ": 56100, \" + G|dblquote + "sat\" + G|dblquote + ": 254}"    ? evtvar = "tmagenta"
+.fo xtsys = xtsys + "hue\" + G|dblquote + ": 0, \" + G|dblquote + "sat\" + G|dblquote + ": 0}"          ? evtvar = "twhite"
+..
+.fo xtsys = xtsys + G|dblquote + " http://" + 'M|tbase' + "/api/" + 'M|tkey' + "/lights/" + 'M|tlight' + "/state"
+..
+.sys 'xtsys' background
+..
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!MEIN:
+.continue END
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!END:
+.continue

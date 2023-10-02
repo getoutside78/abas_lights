@@ -1,0 +1,265 @@
+..!interpreter english translate noabbrev
+..*****************************************************************************
+.. Name           : LIGHTS.BSTART.BA
+.. Date           : 09/15/23
+.. Version        : 2015r4n16p38
+.. Author         : abasAdam
+.. Copyright      : (c) 2023 CLARION - GREENVILLE
+.. Functionality  :
+..
+.. Interface (arguments and their meaning)
+..    uses array argument (arg.i)           : no
+..    uses name argument  (xpname=value)    : no
+..
+..    Argument     meaning
+..    -------------------------------------------------------------------------
+..
+.. Program flow   :
+...Includes       :
+..*****************************************************************************
+..
+..*****************************************************************************
+..
+..
+.make screen line --
+..
+.typ text xtsys xtout xterr xtmessage xtlight xtline xtemp xtoffon xtcolor xtout1 xtip xtkey xtbasefile xtfile
+.typ int xilight xicount xilightnum xiread
+.typ text xton xtbri xthue xtsat xteffect xtxy xtct xtalert xtcolormode xtmode xtreachable xtsel 
+.typ PS8 xtwc
+.typ bool xtrobot xtfp
+..
+..~~~~~~~~~~~~~~~~ A text file needs to be created to hold all the base station IP addresses and keys
+..
+.fo xtsys = "test -s " + "./ow1/BASE.STATIONS"
+.sys 'xtsys' background
+.continue END ? _mehr
+..
+.fo xtbasefile = "./ow1/BASE.STATIONS"
+..
+.file -OPEN xiread 'xtbasefile' 
+..
+!L1.BASE:
+.file -READ xiread xtip ; xtkey^
+.continue E1.BASE ? _mehr
+..
+..~~~~~~~~~~~~~~~~ Ping test for base station
+..
+..~~~~~~~~~~~~~~~~ Scan for all lights by base station
+..
+.fo xtout = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xtout'
+.input DATEI.F
+.out
+.fo xterr = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xterr'
+.input DATEI.F
+.out
+..
+.fo xtsys = "curl --silent http://" + 'xtip' + "/api/" + 'xtkey' + "/lights"
+.fo xtsys = xtsys + " 1> " + 'xtout'
+.fo xtsys = xtsys + " 2> " + 'xterr'
+.sys 'xtsys' background
+..
+.fo xtsys = "cat " + 'xtout'
+..sys 'xtsys'
+..---------------------------------
+..
+.fo xtout1 = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xtout1'
+.input DATEI.F
+.out
+..
+.fo xtsys = "grep -E -o " + 'G|dblquote' + ".{0,5}state" + 'G|dblquote' + " " + 'xtout'
+.fo xtsys = xtsys + " 1> " + 'xtout1'
+.fo xtsys = xtsys + " 2> " + 'xterr'
+.sys 'xtsys' background
+..
+.fo xtsys = "cat " + 'xtout1'
+..sys 'xtsys'
+..
+.fo xilightnum = 0
+..
+!L0SCAN:
+.sel from 'xtout1' xtmessage^
+.continue E0SCAN ? _mehr
+.continue L0SCAN ? _('xtmessage' / "(0-9)*")
+..
+.fo xilightnum = xilightnum + 1
+..
+.continue L0SCAN 
+..
+!E0SCAN:
+..
+.fo xicount = 0
+..
+..~~~~~~~~~~~~~~~~ 
+..
+!LSCAN:
+..
+.fo xicount = xicount + 1
+..
+.continue ESCAN ? xicount > xilightnum 
+..
+.fo xtout = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xtout'
+.input DATEI.F
+.out
+.fo xterr = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xterr'
+.input DATEI.F
+.out
+..
+.fo xtsys = "curl --silent http://" + 'xtip' + "/api/" + 'xtkey' + "/lights/" + 'xicount'
+.fo xtsys = xtsys + " 1> " + 'xtout'
+.fo xtsys = xtsys + " 2> " + 'xterr'
+.sys 'xtsys' background
+..
+.sel from 'xterr' xtmessage^
+.continue OKS1 ? _mehr ; F|empty(xtmessage)
+..
+.fo xtsys = "cat " + 'xterr'
+.sys 'xtsys'
+.continue END
+..
+!OKS1:
+..
+.fo xtsys = "cat " + 'xtout'
+..sys 'xtsys'
+..
+!LS1:
+.sel from 'xtout' xtline^
+.continue ES1 ? _mehr
+..
+.fo xtline      = xtline >> "{" >> "{"
+.fo xtline      = xtline << "}"
+..
+..'xtline'
+..
+.fo xton        = xtline << ","
+.fo xton        = xton   >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtbri       = xtline << ","
+.fo xtbri       = xtbri  >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xthue       = xtline << ","
+.fo xthue       = xthue  >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtsat       = xtline << ","
+.fo xtsat       = xtsat  >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xteffect    = xtline << ","
+.fo xteffect    = xteffect >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtxy        = xtline << "]"
+.fo xtxy        = xtxy >> ":"
+.fo xtline      = xtline >> "]"
+.fo xtline      = xtline >> ","
+..
+.fo xtct        = xtline << ","
+.fo xtct        = xtct >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtalert     = xtline << ","
+.fo xtalert     = xtalert >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtcolormode = xtline << ","
+.fo xtcolormode = xtcolormode >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtmode      = xtline << ","
+.fo xtmode      = xtmode >> ":"
+.fo xtline      = xtline >> ","
+..
+.fo xtreachable = xtline << ""
+.fo xtreachable = xtreachable >> ":"
+.fo xtline      = xtline >> ","
+..
+..on:'xton' bri:'xtbri' hue:'xthue' sat:'xtsat' effect:'xteffect' xy:'xtxy' ct:'xtct' alert:'xtalert' colormode:'xtcolormode' mode:'xtmode' reachable:'xtreachable'
+..
+.fo xtxy        = F|regreplaceall('xtxy', "\[", "")
+.fo xteffect    = xteffect << -1
+.fo xteffect    = xteffect >> -1
+.fo xtalert     = xtalert << -1
+.fo xtalert     = xtalert >> -1
+.fo xtmode      = xtmode << -1
+.fo xtmode      = xtmode >> -1
+.fo xtcolormode = xtcolormode << -1
+.fo xtcolormode = xtcolormode >> -1
+..
+.make screen line +
+.fo M|tbase      = 'xtip'
+.fo M|tkey       = 'xtkey'
+.fo M|tlight     = xicount
+.fo M|ton        =  true ? 'xton' = "true"
+.fo M|tbri       = 'xtbri'
+.fo M|tcolormode = 'xtcolormode'
+.fo M|thue       = 'xthue'
+.fo M|tsat       = 'xtsat'
+.fo M|teffect    = 'xteffect'
+.fo M|txy        = 'xtxy'
+.fo M|tct        = 'xtct'
+.fo M|talert     = 'xtalert' 
+.fo M|tmode      = 'xtmode'
+.fo M|treachable = true ? 'xtreachable' = "true"
+.fo M|tred       = "icon:ball_red"
+.fo M|tblue      = "icon:ball_blue"
+.fo M|tgreen     = "icon:ball_green"
+.fo M|tyellow    = "icon:ball_yellow"
+.fo M|tmagenta   = "icon:ball_red"
+.fo M|twhite     = "icon:box_white"
+.fo M|tblinkon   = "icon:attention"
+.fo M|tblinkoff  = "icon:stop"
+.fo M|tonoff     = "icon:bulb_off" ? _M|ton
+.fo M|tonoff     = "icon:bulb_on"  ?  M|ton
+..
+.continue LS1
+..
+!ES1:
+.continue LSCAN
+..
+!ESCAN:
+.continue L1.BASE
+..
+!E1.BASE:
+..
+..~~~~~~~~~~~~~~~~~~~~~~~ Get work center mapping
+..
+.fo xtsys = "test -s ./ow1/BASE.STATIONS.MAP"
+.sys 'xtsys' background
+.continue END ? _mehr
+..
+.fo xtfile = "./ow1/BASE.STATIONS.MAP"
+..
+!L1.M:
+.sel from 'xtfile' xtwc ; xtrobot ; xtfp ; xtip ; xtlight^
+.continue E1.M ? _mehr
+..
+.sel screen header
+..
+.fo xtsel = "$,,"
+.fo xtsel = xtsel + ";tbase=" + 'xtip'
+.fo xtsel = xtsel + ";tlight=" + 'xtlight'
+.sel screen line 'xtsel'
+.continue L1.M ? _mehr
+..
+.fo M|twc       = xtwc^id
+.fo M|trobot    = xtrobot 
+.fo M|tfp       = xtfp 
+..
+.continue L1.M
+..
+!E1.M:
+.continue END
+
+
+
+..~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!END:
+.continue
