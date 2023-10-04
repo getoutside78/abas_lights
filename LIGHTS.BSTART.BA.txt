@@ -24,8 +24,9 @@
 .make screen line --
 ..
 .typ text xtsys xtout xterr xtmessage xtlight xtline xtemp xtoffon xtcolor xtout1 xtip xtkey xtbasefile xtfile
-.typ int xilight xicount xilightnum xiread
-.typ text xton xtbri xthue xtsat xteffect xtxy xtct xtalert xtcolormode xtmode xtreachable xtsel 
+.typ int xilight xicount xilightnum xiread xiread1
+.typ text xton xtbri xthue xtsat xteffect xtxy xtct xtalert xtcolormode xtmode xtreachable xtsel xtping
+.typ text xtpingresult
 .typ PS8 xtwc
 .typ bool xtrobot xtfp
 ..
@@ -44,6 +45,40 @@
 .continue E1.BASE ? _mehr
 ..
 ..~~~~~~~~~~~~~~~~ Ping test for base station
+..
+.fo xtping = "./rmtmp/LIGHTS." + 'G|versionneu' + ".TMP"
+.out new 'xtping'
+.input DATEI.F
+.out
+..
+.fo xtsys = "ping -c 2 -q " + 'xtip' + " > " + 'xtping'
+.sys 'xtsys' background
+..
+.fo xtsys = "cat " + 'xtping'
+..sys 'xtsys'
+..
+.file -OPEN xiread1 'xtping' 
+..
+!L1.PING:
+.file -READ xiread1 xtline^
+.file -READ xiread1 xtline^
+.file -READ xiread1 xtline^
+.file -READ xiread1 xtline^
+..
+.fo xtpingresult = 'xtline' >> "," << ","
+.fo xtpingresult = 'xtpingresult' << " "
+..
+.continue L2.BASE ? 'xtpingresult' <> "0"
+..
+.make screen line +
+.colour -BACKGROUND "255 120 120" 'M|aktzeile'
+.fo M|tbase      = 'xtip'
+.fo M|tkey       = 'xtkey'
+.protect -LINE 'M|aktzeile'
+..
+.continue L1.BASE
+..
+!L2.BASE:
 ..
 ..~~~~~~~~~~~~~~~~ Scan for all lights by base station
 ..
@@ -194,6 +229,7 @@
 .fo xtcolormode = xtcolormode >> -1
 ..
 .make screen line +
+.colour -BACKGROUND "-1 -1 -1" 'M|aktzeile'
 .fo M|tbase      = 'xtip'
 .fo M|tkey       = 'xtkey'
 .fo M|tlight     = xicount
